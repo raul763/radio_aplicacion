@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proyecto de Aplicación - Radio Casera</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+  body, html { height: 100%; overflow-x: hidden; scroll-behavior: smooth; background: #0d0d0d; color: #fff; }
+
+  /* Fondo partículas */
+  
+  #background-canvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  z-index: 0; /* muy atrás */
+}
+
+
+  /* Animación inicial */
+  #intro {
+    position: fixed;
+    width: 100%; height: 100%;
+    background: linear-gradient(45deg, #1f1c2c, #928dab);
+    color: #fff;
+    display: flex; justify-content: center; align-items: center;
+    font-size: 3rem; z-index: 1000; flex-direction: column; text-align: center;
+    animation: introFade 6s forwards;
+  }
+
+  @keyframes introFade {
+    0% { opacity: 0; transform: scale(0.5); }
+    50% { opacity: 1; transform: scale(1.2); }
+    100% { opacity: 0; transform: scale(1); display: none; }
+  }
+
+  /* Header */
+  header {
+    position: fixed;
+    top: 0; width: 100%;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 30px; z-index: 999;
+  }
+
+  
+section { position: relative; z-index: 1; } /* para que el texto aparezca */
+
+  .lang-btn {
+    background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    padding: 8px 18px; border-radius: 25px; cursor: pointer;
+    margin-left: 10px; font-weight: bold; color: #fff;
+    transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(255, 75, 43, 0.5);
+  }
+  .lang-btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 6px 18px rgba(255, 75, 43, 0.7); }
+
+  nav {
+    display: flex; gap: 20px; align-items: center; flex:1; justify-content: center;
+  }
+
+  nav a {
+    color: #fff; text-decoration: none; font-weight: 600; padding: 10px 22px;
+    border-radius: 20px; background: rgba(255,255,255,0.1); backdrop-filter: blur(4px);
+    transition: all 0.3s ease;
+  }
+  nav a:hover {
+    background: linear-gradient(45deg,#ff416c,#ff4b2b);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 6px 15px rgba(255,75,43,0.7);
+  }
+
+  /* Texto central del header (Proyecto Aplicación) */
+  #project-title {
+    font-size: 1.8rem; font-weight: bold;
+    color: #ff416c; text-shadow: 0 0 10px #f7465e;
+  }
+
+  /* Secciones */
+ 
+ section h1, section p { opacity:0; transform:translateY(20px); transition:all 0.8s ease-out; }
+ section.visible h1, section.visible p { opacity:1; transform:translateY(0); }
+
+  section p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    max-width: 800px;
+    color: #ffffff; /* blanco puro */
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255,255,255,0.6);
+    background: rgba(148, 135, 135, 0.3); /* contraste extra */
+    padding: 10px 15px;
+    border-radius: 8px;
+  }
+
+
+  /* Animaciones scroll */
+  section h1, section p { opacity:0; transform:translateY(20px); transition:all 0.8s ease-out; }
+  section.visible h1, section.visible p { opacity:1; transform:translateY(0); }
+ .radio {
+    background: linear-gradient(145deg, #ff5c5c, #c62828);
+    border-radius: 25px;
+    width: 380px;
+    padding: 20px;
+    text-align: center;
+    position: relative;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  }
+
+  /* Altavoz lateral */
+  .speaker {
+    position: absolute;
+    right: 5px;
+    top: 80%;
+    transform: translateY(-50%);
+    background: radial-gradient(circle, #222 20%, #111 80%);
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 10px #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .speaker::before {
+    content: "";
+    width: 70%;
+    height: 70%;
+    background: repeating-radial-gradient(circle, #333 0, #333 2px, transparent 2px, transparent 4px);
+    border-radius: 50%;
+  }
+
+  .display {
+    background: #000;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    padding: 10px;
+    font-size: 1.1em;
+    letter-spacing: 1px;
+    color: #0f0;
+    font-family: 'Courier New', monospace;
+    box-shadow: inset 0 0 8px #0f0;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    background: #555;
+    color: #fff;
+    font-weight: bold;
+    transition: transform 0.2s, background 0.2s;
+    width: 50px;
+    height: 50px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+  }
+
+  button:hover {
+    background: #777;
+    transform: scale(1.1);
+  }
+
+  /* Onda animada */
+  .waves {
+    margin-top: 15px;
+    height: 20px;
+  }
+
+  .wave {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #0f0;
+    display: inline-block;
+    margin: 0 3px;
+    opacity: 0;
+    transform: scale(1);
+    transition: all 0.3s;
+  }
+
+  /* Separación extra para el último círculo */
+  .wave:last-child {
+    margin-left: 20px;
+  }
+
+  .radio.on .wave {
+    opacity: 0.5;
+    animation: pulse 1s infinite;
+  }
+
+  .wave:nth-child(2) { animation-delay: 0.2s; }
+  .wave:nth-child(3) { animation-delay: 0.4s; }
+  .wave:nth-child(4) { animation-delay: 0.6s; }
+  .wave:nth-child(5) { animation-delay: 0.8s; }
+  .wave:nth-child(6) { animation-delay: 1s; }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(2); opacity: 1; }
+  }
+  
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    width: 80%;
+    max-width: 1000px;
+  }
+
+  .image-card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+
+  .image-card img {
+    width: 80%;
+    height: auto;
+    display: block;
+    transition: transform 0.3s;
+  }
+
+  .image-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(255,65,108,0.6);
+  }
+
+  .desc {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .image-card:hover .desc {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<!-- Fondo partículas -->
+<canvas id="background-canvas"></canvas>
+
+<!-- Animación inicial -->
+<div id="intro">
+  <div>📻</div>
+  <div>RADIO CON CIRCUITO INTEGRADO</div>
+</div>
+
+<!-- Header -->
+<header>
+  <div class="lang-buttons">
+    <span class="lang-btn" onclick="setLang('es')">Español</span>
+    <span class="lang-btn" onclick="setLang('en')">Inglés</span>
+  </div>
+  <nav>
+    <a href="#inicio" data-text-es="Inicio" data-text-en="Home">Inicio</a>
+    <span id="project-title">Proyecto Aplicación-Raúl Toca-5TO.BACO</span>
+    <a href="#componentes" data-text-es="Componentes" data-text-en="Components">Componentes</a>
+    <a href="#codificacion" data-text-es="Codificación" data-text-en="Coding">Codificación</a>
+  </nav>
+</header>
+
+
+ 
+<section id="inicio" class="visible" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; gap:20px;">
+  <h1> Radio con Circuito Integrado IC</h1>
+  <p data-text-es="Proyecto Educativo de una Radio utilizando diferentes componentes electrónicos, además de utilizar el lenguaje de programación  'C++' para la codificación del circuito"
+     data-text-en="Educational Project of a Radio using different electronic components, in addition to using the 'C++' programming language for circuit coding.">
+   Proyecto Educativo de una Radio utilizando diferentes componentes electrónicos, además de utilizar el lenguaje de programación  'C++' para la codificación del circuito
+  </p>
+
+
+
+  <div class="radio off">
+    <div class="display" id="display">OFF</div>
+    <div class="controls">
+      <button id="power">⏻</button>
+      <button id="volDown">🔉</button>
+      <button id="volUp">🔊</button>
+      <button id="prevStation">⏮</button>
+      <button id="nextStation">⏭</button>
+    </div>
+
+    <div class="waves">
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
+      <div class="wave"></div>
+    </div>
+
+    <div class="speaker"></div>
+  </div>
+</section>
+
+
+
+<section id="componentes" class="visible" 
+         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; gap:20px;">
+
+  <h1 data-text-es="Componentes" data-text-en="Components">Componentes</h1>
+
+  <p data-text-es="Lista de componentes que usamos, además adjuntamos procedimiento de la creación de nuestro proyecto."
+     data-text-en="List of components we used, and attached is the procedure for creating our project.">
+     Lista de componentes que usamos, además adjuntamos procedimiento de la creación de nuestro proyecto.
+  </p>
+ <div class="image-grid">
+  <div class="image-card">
+    <img src="../toca/images/image1.jpg" alt="Imagen 1">
+    <span class="desc">Placa de Circuito Impreso</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image2.jpg" alt="Imagen 2">
+    <span class="desc">Otra placa</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image3.jpg" alt="Imagen 3">
+    <span class="desc">Bocinas</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image4.jpg" alt="Imagen 4">
+    <span class="desc">Led y Resistencias de tolerancia de 1%</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image5.jpg" alt="Imagen 5">
+    <span class="desc">PAM (Amplificador de Sonido)</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image6.jpg" alt="Imagen 6">
+    <span class="desc">Circuito</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image7.jpg" alt="Imagen 6">
+    <span class="desc">PAM</span>
+  </div>
+   <div class="image-card">
+    <img src="../toca/images/image8.jpg" alt="Imagen 6">
+    <span class="desc">Cables de Audio</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image9.jpg" alt="Imagen 6">
+    <span class="desc">Más Componentes</span>
+  </div>
+   <div class="image-card">
+    <img src="../toca/images/image10.jpg" alt="Imagen 6">
+    <span class="desc">Más Componentes</span>
+  </div>
+   <div class="image-card">
+    <img src="../toca/images/image11.jpg" alt="Imagen 6">
+    <span class="desc">Trabajando</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image12.png" alt="Imagen 6">
+    <span class="desc">Trabajando</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image13.jpg" alt="Imagen 6">
+    <span class="desc">Ajustes Finales</span>
+  </div>
+  <div class="image-card">
+    <img src="../toca/images/image14.jpg" alt="Imagen 6">
+    <span class="desc">Ajustes Finales</span>
+  </div>
+</div>
+</section>
+
+
+<section id="codificacion" class="visible" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:100vh; text-align:center; gap:20px;">
+
+  <h1 data-text-es="Codificación" data-text-en="Coding">Codificación</h1>
+  <p data-text-es="Aquí explicaremos el código y la lógica detrás de la radio casera." data-text-en="Here we will explain the code and logic behind the homemade radio.">
+    Aquí explicaremos el código y la lógica detrás de la radio casera, C++.
+  </p>
+  <!-- Código -->
+  <pre><code>
+#include &lt;iostream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+class RadioFM {
+private:
+    double frecuencia;
+    string modo;
+    bool encendido;
+
+public:
+    RadioFM() {
+        frecuencia = 100.1;
+        modo = "FM";
+        encendido = true;
+    }
+
+    void subirFrecuencia() {
+        frecuencia += 0.1;
+        if (frecuencia &gt; 108.0) frecuencia = 88.0;
+        mostrarPantalla();
+    }
+
+    void bajarFrecuencia() {
+        frecuencia -= 0.1;
+        if (frecuencia &lt; 88.0) frecuencia = 108.0;
+        mostrarPantalla();
+    }
+
+    void cambiarModo() {
+        if (modo == "FM") modo = "AM";
+        else if (modo == "AM") modo = "USB";
+        else if (modo == "USB") modo = "SD";
+        else modo = "FM";
+        mostrarPantalla();
+    }
+
+    void mostrarPantalla() {
+        cout &lt;&lt; "Modo: " &lt;&lt; modo &lt;&lt; " | Frecuencia: " &lt;&lt; frecuencia &lt;&lt; " MHz" &lt;&lt; endl;
+    }
+
+    void reproducirAudio() {
+        if (modo == "USB" || modo == "SD") {
+            cout &lt;&lt; "Reproduciendo audio desde " &lt;&lt; modo &lt;&lt; "..." &lt;&lt; endl;
+        } else {
+            cout &lt;&lt; "Escuchando señal " &lt;&lt; modo &lt;&lt; " a " &lt;&lt; frecuencia &lt;&lt; " MHz" &lt;&lt; endl;
+        }
+    }
+};
+
+int main() {
+    RadioFM radio;
+    radio.mostrarPantalla();
+    
+    // Simulación de botones
+    radio.subirFrecuencia();
+    radio.subirFrecuencia();
+    radio.bajarFrecuencia();
+    radio.cambiarModo();
+    radio.reproducirAudio();
+    
+    return 0;
+}
+  </code></pre>
+
+  <!-- Explicación de funciones -->
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:15px; width:100%; max-width:1000px;">
+    
+    <div style="background:#16213e33; padding:15px; border-radius:10px;" >
+      <h4 data-text-es="⚡ subirFrecuencia()" data-text-en="⚡ increaseFrequency()">⚡ subirFrecuencia()</h4>
+      <p data-text-es="Incrementa la frecuencia en 0.1 MHz. Si supera 108.0 MHz, vuelve a 88.0 MHz." 
+         data-text-en="Increases frequency by 0.1 MHz. If it exceeds 108.0 MHz, it returns to 88.0 MHz.">
+         Incrementa la frecuencia en 0.1 MHz. Si supera 108.0 MHz, vuelve a 88.0 MHz.
+      </p>
+    </div>
+    
+    <div style="background:#16213e33; padding:15px; border-radius:10px;">
+      <h4 data-text-es="⚡ bajarFrecuencia()" data-text-en="⚡ decreaseFrequency()">⚡ bajarFrecuencia()</h4>
+      <p data-text-es="Disminuye la frecuencia en 0.1 MHz. Si baja de 88.0 MHz, salta a 108.0 MHz."
+         data-text-en="Decreases frequency by 0.1 MHz. If it goes below 88.0 MHz, it jumps to 108.0 MHz.">
+         Disminuye la frecuencia en 0.1 MHz. Si baja de 88.0 MHz, salta a 108.0 MHz.
+      </p>
+    </div>
+
+    <div style="background:#16213e33; padding:15px; border-radius:10px;">
+      <h4 data-text-es="📻 cambiarModo()" data-text-en="📻 changeMode()">📻 cambiarModo()</h4>
+      <p data-text-es="Cambia entre modos: FM → AM → USB → SD → FM (ciclo continuo)."
+         data-text-en="Changes modes: FM → AM → USB → SD → FM (continuous cycle).">
+         Cambia entre modos: FM → AM → USB → SD → FM (ciclo continuo).
+      </p>
+    </div>
+
+    <div style="background:#16213e33; padding:15px; border-radius:10px;">
+      <h4 data-text-es="📺 mostrarPantalla()" data-text-en="📺 showScreen()">📺 mostrarPantalla()</h4>
+      <p data-text-es="Muestra el modo y frecuencia actual en la pantalla del radio."
+         data-text-en="Displays the current mode and frequency on the radio screen.">
+         Muestra el modo y frecuencia actual en la pantalla del radio.
+      </p>
+    </div>
+
+    <div style="background:#16213e33; padding:15px; border-radius:10px;">
+      <h4 data-text-es="🔊 reproducirAudio()" data-text-en="🔊 playAudio()">🔊 reproducirAudio()</h4>
+      <p data-text-es="Reproduce audio desde USB/SD o sintoniza la frecuencia seleccionada."
+         data-text-en="Plays audio from USB/SD or tunes the selected frequency.">
+         Reproduce audio desde USB/SD o sintoniza la frecuencia seleccionada.
+      </p>
+    </div>
+
+    <div style="background:#16213e33; padding:15px; border-radius:10px;">
+      <h4 data-text-es="🏗️ Constructor RadioFM()" data-text-en="🏗️ RadioFM Constructor()">🏗️ Constructor RadioFM()</h4>
+      <p data-text-es="Inicializa la radio con frecuencia 100.1 MHz, modo FM y encendido."
+         data-text-en="Initializes the radio with 100.1 MHz, FM mode, and turned on.">
+         Inicializa la radio con frecuencia 100.1 MHz, modo FM y encendido.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<script>
+  // Cambio de idioma
+  function setLang(lang) {
+    document.querySelectorAll('[data-text-es]').forEach(el=>{
+      el.textContent = lang==='es'?el.getAttribute('data-text-es'):el.getAttribute('data-text-en');
+    });
+  }
+
+  // Animación scroll
+  const sections = document.querySelectorAll('section');
+  function revealSections(){
+    const scrollY = window.scrollY + window.innerHeight*0.7;
+    sections.forEach(section=>{
+      if(section.offsetTop<scrollY) section.classList.add('visible');
+    });
+  }
+  window.addEventListener('scroll',revealSections);
+
+  // Partículas fondo
+  const canvas=document.getElementById('background-canvas');
+  const ctx=canvas.getContext('2d');
+  let particlesArray=[];
+  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+
+  class Particle {
+    constructor() {
+      this.x=Math.random()*canvas.width;
+      this.y=Math.random()*canvas.height;
+      this.size=Math.random()*3+1;
+      this.speedX=Math.random()*1-0.5;
+      this.speedY=Math.random()*1-0.5;
+    }
+    update() {
+      this.x+=this.speedX; this.y+=this.speedY;
+      if(this.x<0||this.x>canvas.width)this.speedX=-this.speedX;
+      if(this.y<0||this.y>canvas.height)this.speedY=-this.speedY;
+    }
+    draw() {
+      ctx.fillStyle='rgba(255,65,108,0.8)';
+      ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  function initParticles() {
+    particlesArray=[];
+    for(let i=0;i<120;i++) particlesArray.push(new Particle());
+  }
+
+  function animateParticles() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particlesArray.forEach(p=>{p.update();p.draw();});
+    requestAnimationFrame(animateParticles);
+  }
+
+  window.addEventListener('resize',()=>{
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight; initParticles();
+  });
+
+  initParticles();
+  animateParticles();
+   const powerBtn = document.getElementById('power');
+  const display = document.getElementById('display');
+  const radio = document.querySelector('.radio');
+  const volUp = document.getElementById('volUp');
+  const volDown = document.getElementById('volDown');
+  const prevStation = document.getElementById('prevStation');
+  const nextStation = document.getElementById('nextStation');
+
+  let isOn = false;
+  let volume = 5;
+  let stations = [88.1, 90.5, 92.3, 95.7, 101.2, 104.5];
+  let currentStation = 0;
+
+  function updateDisplay() {
+    if(!isOn){
+      display.textContent = 'OFF';
+      radio.classList.remove('on');
+    } else {
+      display.textContent = `ON | FM ${stations[currentStation].toFixed(1)} MHz | Vol: ${volume}`;
+      radio.classList.add('on');
+    }
+  }
+
+  powerBtn.addEventListener('click', () => {
+    isOn = !isOn;
+    updateDisplay();
+  });
+
+  volUp.addEventListener('click', () => {
+    if(isOn && volume < 10){
+      volume++;
+      updateDisplay();
+    }
+  });
+
+  volDown.addEventListener('click', () => {
+    if(isOn && volume > 0){
+      volume--;
+      updateDisplay();
+    }
+  });
+
+  nextStation.addEventListener('click', () => {
+    if(isOn){
+      currentStation = (currentStation + 1) % stations.length;
+      updateDisplay();
+    }
+  });
+
+  prevStation.addEventListener('click', () => {
+    if(isOn){
+      currentStation = (currentStation - 1 + stations.length) % stations.length;
+      updateDisplay();
+    }
+  });
+  // Al final de tu script
+setLang('es'); // Carga español al iniciar
+
+</script>
+</body>
+</html>
